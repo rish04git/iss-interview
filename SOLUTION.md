@@ -1,113 +1,58 @@
-# Solution Documentation
-
-**Candidate Name:** [Your Name]  
-**Completion Date:** [Date]
-
----
+# Solution Overview
 
 ## Problems Identified
-
-_Describe the issues you found in the original implementation. Consider aspects like:_
-- Architecture and design patterns
-- Code quality and maintainability
-- Security vulnerabilities
-- Performance concerns
-- Testing gaps
-
-[Your analysis here]
-
----
+- Tightly coupled controller and service: controller instantiated TodoService directly, making testing and DI difficult.
+- SQL built via string interpolation which is vulnerable to SQL injection and formatting bugs.
+- Program.cs performed database initialization inline and duplicated DB path; no configuration.
+- Controller used POST for all operations and non-RESTful routes.
+- Tests were shallow and relied on implicit global DB file making them brittle.
 
 ## Architectural Decisions
-
-_Explain the architecture you chose and why. Consider:_
-- Design patterns applied
-- Project structure changes
-- Technology choices
-- Separation of concerns
-
-[Your decisions here]
-
----
-
-## Trade-offs
-
-_Discuss compromises you made and the reasoning behind them. Consider:_
-- What did you prioritize?
-- What did you defer or simplify?
-- What alternatives did you consider?
-
-[Your trade-offs here]
-
----
+- Added ITodoService interface to decouple controller from implementation and enable Dependency injection.
+- Refactored TodoService to use parameterized queries (Sqlite parameters) to avoid injection and formatting issues.
+- Use dependency injection to provide a single TodoService instance (singleton) configured from app configuration.
+- Make controller RESTful using standard HTTP verbs and routes (/api/todos).
+- Tests use an isolated temporary SQLite file per test to make tests reliable and independent.
 
 ## How to Run
+1. Ensure .NET 8 SDK is installed.
+2. From solution root run:
+   - dotnet run --project TodoApi
+3. The API will start and Swagger UI will be available at /swagger when running in Development.
 
-### Prerequisites
-[List required software, versions, etc.]
-
-### Build
-```bash
-# Add your build commands
-```
-
-### Run
-```bash
-# Add your run commands
-```
-
-### Test
-```bash
-# Add your test commands
-```
-
----
+## Running Tests
+From solution root run:
+- dotnet test
 
 ## API Documentation
+Base url : /api/todos
+- POST /api/todos
+  - Body: Todo JSON (Title required)
+  - Creates a todo. Returns 201 Created with location header.
+	
+- GET /api/todos
+  - Returns all todos.
+	
+- GET /api/todos/{id}
+  - Returns a single todo by id or 404.
+	
+- PUT /api/todos/{id}
+  - Body: Todo JSON (Title required)
+  - Updates a todo. Returns 200 OK or 404 if not found.
+	
+- DELETE /api/todos/{id}
+  - Deletes a todo. Returns 204 No Content or 404 if not found.
 
-### Endpoints
-
-#### Create TODO
-```
-Method: [HTTP method]
-URL: [endpoint]
-Request Body: [example]
-Response: [example]
-```
-
-#### Get TODO(s)
-```
-Method: [HTTP method]
-URL: [endpoint]
-Request: [example]
-Response: [example]
-```
-
-#### Update TODO
-```
-Method: [HTTP method]
-URL: [endpoint]
-Request Body: [example]
-Response: [example]
-```
-
-#### Delete TODO
-```
-Method: [HTTP method]
-URL: [endpoint]
-Request: [example]
-Response: [example]
-```
-
----
+Model:
+- Id (int)
+- Title (string)
+- Description (string)
+- IsCompleted (bool)
+- CreatedAt (DateTime)
 
 ## Future Improvements
 
-_What would you do if you had more time? Consider:_
-- Additional features
-- Performance optimizations
-- Enhanced testing
-- Better documentation
-- Deployment considerations
-
-[Your ideas here]
+- Use EF COre for productivity and migrations.
+- Add integration tests with test server and in-memory DB.
+- Add validation attributes for clearer model contracts.
+- Add paging/filtering endpoints and search.
